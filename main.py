@@ -1,0 +1,116 @@
+import zipfile
+import os
+import sys
+import shutil
+import pandas as pd
+
+
+def extract_zip(zip_file_path, extraction_folder):
+    # Create the extraction folder if it does not exist
+    os.makedirs(extraction_folder, exist_ok=True)
+
+    # Extract ZIP file
+    with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
+        zip_ref.extractall(extraction_folder)
+
+    print(f"Successfully extracted to {extraction_folder}")
+
+    move_extracted_content(extraction_folder)
+
+
+def move_extracted_content(parent_folder):
+    # Get the list of directories in the parent folder
+    extracted_dirs = [
+        d
+        for d in os.listdir(parent_folder)
+        if os.path.isdir(os.path.join(parent_folder, d))
+    ]
+
+    if not extracted_dirs:
+        print("No folders found to extract.")
+        return
+
+    # Assuming there's only one folder in the parent directory
+    nested_folder = os.path.join(parent_folder, extracted_dirs[0])
+
+    print("---------------------")
+    # Extract any ZIP files in the nested folder
+    for item in os.listdir(nested_folder):
+        print(item)
+        item_path = os.path.join(nested_folder, item)
+        if item.endswith(".zip"):
+            extract_zip(item_path, nested_folder)
+            # Move extracted contents up one level
+
+            for extracted_item in os.listdir(nested_folder):
+                extracted_item_path = os.path.join(nested_folder, extracted_item)
+
+                if not "dropboxes" in extracted_item_path:
+                    continue
+
+                if extracted_item.endswith(".xsl"):
+                    print(extracted_item)
+
+                print("\t" + extracted_item_path)
+                if os.path.isdir(extracted_item_path):
+                    for file in os.listdir(extracted_item_path):
+                        shutil.move(
+                            os.path.join(extracted_item_path, file), parent_folder
+                        )
+                    os.rmdir(extracted_item_path)
+
+
+def formatXSL(input_file_path):
+    output_file_path = "Bewertung.xls"  # Specify where to save the new .xls file
+
+    # Specify the columns to remove (by name)
+    columns_to_remove = [
+        "Anrede",
+        "Studiengruppe",
+        "Organisationseinheit",
+        "Fachsemester",
+        "Studiengang",
+        "Studienabschluss",
+        "Institution",
+        "Standort",
+    ]  # Change these to the names of the columns to remove
+
+    # Call the function
+    remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove)
+
+
+def remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove):
+    # Read the .xls file into a DataFrame
+    df = pd.read_excel(input_file_path)
+
+    # Drop specified columns
+    df.drop(columns=columns_to_remove, inplace=True)
+
+    # Save the modified DataFrame to a new .xls file
+    df.to_excel(output_file_path, index=False)
+
+
+def extract_zipOLD(zip_file_path, extraction_folder):
+    # Create the extraction folder if it does not exist
+    os.makedirs(extraction_folder, exist_ok=True)
+
+    # Extract ZIP file
+    with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
+        zip_ref.extractall(extraction_folder)
+
+    print(f"Successfully extracted to {extraction_folder}")
+
+
+if __name__ == "__main__":
+    # Check for correct number of arguments
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <zip_file_path> <extraction_folder>")
+        sys.exit(1)
+
+    # Get arguments
+    zip_file_path = sys.argv[1]
+    # extraction_folder = sys.argv[2]
+
+    # Call the function to extract the ZIP file
+    filePath = extract_zip(zip_file_path, "ZIP1")
+    formatXSL(filePath)
