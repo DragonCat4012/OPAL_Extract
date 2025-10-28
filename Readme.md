@@ -20,6 +20,7 @@ uv venv .venv
 ```
 
 Activate UV
+
 ```bash
 source .venv/bin/activate
-``
+```
