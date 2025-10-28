@@ -6,8 +6,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
-dropbox_immanrs = []
-
+dropbox_immanrs = [] # TODO: read entrys from readme.txt?
 
 def extract_zip(zip_file_path, extraction_folder):
     os.makedirs(extraction_folder, exist_ok=True)
@@ -26,8 +25,8 @@ def extract_zip(zip_file_path, extraction_folder):
 
     return rating_file_name
 
-
 def move_extracted_content(parent_folder):
+    """Move dropboxes and extratc content from them"""
     global dropbox_immanrs
     extracted_dirs = [
         d
@@ -53,6 +52,7 @@ def move_extracted_content(parent_folder):
             extract_zip(item_path, nested_folder)
 
             for extracted_item in os.listdir(nested_folder):
+                print(extracted_item)
                 extracted_item_path = os.path.join(nested_folder, extracted_item)
 
                 if not "dropboxes" in extracted_item_path:
@@ -69,10 +69,10 @@ def move_extracted_content(parent_folder):
 
 
 def formatXSL(input_file_path, group):
-    # print("XSL: " + input_file_path)
+    """Format XLSX Sheet and color in rows where dropboxes are there"""
+    # TODO: maybe only dropboxes with content in them?
 
-    output_file_path = os.path.join(
-        input_file_path.split("/")[0], f"Bewertung_{group}.xlsx"
+    output_file_path = os.path.join(input_file_path.split(os.sep)[0], f"Bewertung_{group}.xlsx"
     )
 
     columns_to_remove = [
@@ -90,10 +90,10 @@ def formatXSL(input_file_path, group):
 
     remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove)
 
-
 def remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove):
     df = pd.read_excel(input_file_path)
     df.drop(columns=columns_to_remove, inplace=True)
+    print(output_file_path)
     df.to_excel(output_file_path, engine="openpyxl", index=False)
 
     workbook = load_workbook(output_file_path)
@@ -113,7 +113,6 @@ def remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove
                 cell.fill = fill
     workbook.save(output_file_path)
     print(f"{count} persons marked in excel sheet")
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
