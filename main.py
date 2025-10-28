@@ -3,30 +3,32 @@ import os
 import sys
 import shutil
 import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
+
+dropbox_immanrs = []
 
 
 def extract_zip(zip_file_path, extraction_folder):
-    # Create the extraction folder if it does not exist
     os.makedirs(extraction_folder, exist_ok=True)
 
-    # Extract ZIP file
     with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
         zip_ref.extractall(extraction_folder)
 
-    print(f"Successfully extracted to {extraction_folder}")
+    print(f"> Successfully extracted to {extraction_folder}")
 
-    retunrstr = None
+    rating_file_name = None
     for item in os.listdir(extraction_folder):
         if item.endswith(".xlsx"):
             print(item)
-            retunrstr = os.path.join(extraction_folder, item)
+            rating_file_name = os.path.join(extraction_folder, item)
     move_extracted_content(extraction_folder)
 
-    return retunrstr
+    return rating_file_name
 
 
 def move_extracted_content(parent_folder):
-    # Get the list of directories in the parent folder
+    global dropbox_immanrs
     extracted_dirs = [
         d
         for d in os.listdir(parent_folder)
@@ -37,19 +39,18 @@ def move_extracted_content(parent_folder):
         print("No folders found to extract.")
         return
 
-    # Assuming there's only one folder in the parent directory
     nested_folder = os.path.join(parent_folder, extracted_dirs[0])
 
-    print("---------------------")
+    print("---------------------Dropboxes-------------------------")
 
-    # Extract any ZIP files in the nested folder
     for item in os.listdir(nested_folder):
-        print(item)
+        print("\t" + item)
+        dropbox_immanrs.append(f"{item}".split("_")[-1])
+
         item_path = os.path.join(nested_folder, item)
 
         if item.endswith(".zip"):
             extract_zip(item_path, nested_folder)
-            # Move extracted contents up one level
 
             for extracted_item in os.listdir(nested_folder):
                 extracted_item_path = os.path.join(nested_folder, extracted_item)
@@ -57,7 +58,8 @@ def move_extracted_content(parent_folder):
                 if not "dropboxes" in extracted_item_path:
                     continue
 
-                print("\t" + extracted_item_path)
+                print("\t\t" + extracted_item_path)
+
                 if os.path.isdir(extracted_item_path):
                     for file in os.listdir(extracted_item_path):
                         shutil.move(
@@ -66,10 +68,12 @@ def move_extracted_content(parent_folder):
                     os.rmdir(extracted_item_path)
 
 
-def formatXSL(input_file_path):
-    print("XSL: " + input_file_path)
+def formatXSL(input_file_path, group):
+    # print("XSL: " + input_file_path)
 
-    output_file_path = os.path.join(input_file_path.split("/")[0], "Bewertung.xlsx")
+    output_file_path = os.path.join(
+        input_file_path.split("/")[0], f"Bewertung_{group}.xlsx"
+    )
 
     columns_to_remove = [
         "Anrede",
@@ -90,30 +94,40 @@ def formatXSL(input_file_path):
 def remove_columns_from_xls(input_file_path, output_file_path, columns_to_remove):
     df = pd.read_excel(input_file_path)
     df.drop(columns=columns_to_remove, inplace=True)
-    df.to_excel(output_file_path, index=False)
+    df.to_excel(output_file_path, engine="openpyxl", index=False)
 
+    workbook = load_workbook(output_file_path)
+    sheet = workbook.active
 
-def extract_zipOLD(zip_file_path, extraction_folder):
-    os.makedirs(extraction_folder, exist_ok=True)
+    fill = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
 
-    # Extract ZIP file
-    with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
-        zip_ref.extractall(extraction_folder)
+    header = df.columns.tolist()
+    target_index = header.index("Matrikelnummer")
 
-    print(f"Successfully extracted to {extraction_folder}")
+    count = 0
+
+    for row in sheet.iter_rows(min_row=1):
+        if f"{row[target_index].value}" in dropbox_immanrs:
+            count += 1
+            for cell in row:
+                cell.fill = fill
+    workbook.save(output_file_path)
+    print(f"{count} persons marked in excel sheet")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <zip_file_path> <extraction_folder>")
+    if len(sys.argv) != 3:
+        print("Usage: python script.py <zip_file_path> <groupnumber>")
         sys.exit(1)
 
-    # Get arguments
     zip_file_path = sys.argv[1]
-    if os.path.exists("ZIP1"):
-        # Remove the directory and all its contents
-        shutil.rmtree("ZIP1")
-        print(f"Directory {'ZIP1'} has been deleted successfully.")
+    groupnumber = sys.argv[2]
+    foldername = f"GruMCI G{groupnumber}"
 
-    filePath = extract_zip(zip_file_path, "ZIP1")
-    formatXSL(filePath)
+    # rmeove dir if already exists
+    if os.path.exists(foldername):
+        shutil.rmtree(foldername)
+        print("Directory ZIP1 has been deleted successfully.")
+
+    filePath = extract_zip(zip_file_path, foldername)
+    formatXSL(filePath, groupnumber)
