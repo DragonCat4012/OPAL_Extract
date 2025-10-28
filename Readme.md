@@ -1,4 +1,6 @@
-# OPAL ZIP Extractor?
+# OPAL ZIP Extractor
+
+![alt text](image.png)
 
 ## Run
 
