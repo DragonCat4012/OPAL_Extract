@@ -1,3 +1,7 @@
 .venv
 *.zip
 */
+!lib/
+__pycache__
+.venv.vscode
+.zed

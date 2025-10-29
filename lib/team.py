@@ -6,4 +6,5 @@ class Team:
         self.member = members
 
     def is_member(self, person):
+        """Check if person is in group"""
         return person in self.member
