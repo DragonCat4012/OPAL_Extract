@@ -2,6 +2,7 @@
 *.zip
 */
 !lib/
+!assets/
 __pycache__
 .venv.vscode
 .zed

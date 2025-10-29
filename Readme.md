@@ -1,6 +1,6 @@
 # OPAL ZIP Extractor
 
-![alt text](image.png)
+![alt text](assets/image.png)
 
 ## Run
 
@@ -35,3 +35,7 @@ source .venv/bin/activate
 ```bash
 .venv\Scripts\activate
 ```
+
+## Example Output Table
+
+![alt text](assets/image-1.png)
