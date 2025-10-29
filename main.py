@@ -5,6 +5,7 @@ import shutil
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+import re
 
 dropbox_immanrs = [] # TODO: read entrys from readme.txt?
 
@@ -14,16 +15,16 @@ def extract_zip(zip_file_path, extraction_folder, print_info = False):
     with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
         zip_ref.extractall(extraction_folder)
 
-    print(f"> Successfully extracted to {extraction_folder}")
+    #print(f"> Successfully extracted to {extraction_folder}")
 
     rating_file_name = None
     for item in os.listdir(extraction_folder):
         if item.endswith(".xlsx"):
-            print(f"\t {item}")
+            print(f"\t{item}")
             rating_file_name = os.path.join(extraction_folder, item)
     move_extracted_content(extraction_folder, print_info)
 
-    print(f"> Returning : {rating_file_name}")
+    #print(f"> Returning : {rating_file_name}")
     return rating_file_name
 
 def move_extracted_content(parent_folder, print_info):
@@ -36,7 +37,7 @@ def move_extracted_content(parent_folder, print_info):
     ]
 
     if not extracted_dirs:
-        print("No folders found to extract.")
+        #print("No folders found to extract.")
         return
 
     nested_folder = os.path.join(parent_folder, extracted_dirs[0])
@@ -46,15 +47,36 @@ def move_extracted_content(parent_folder, print_info):
 
     for item in os.listdir(nested_folder):
         if print_info:
-            print("\t" + item)
+            print(f"\t{item}")
         dropbox_immanrs.append(f"{item}".split("_")[-1])
 
         item_path = os.path.join(nested_folder, item)
 
+        # Assignment entzip
+        if os.path.isdir(item_path):  
+            all_files = os.listdir(item_path)
+            for file in all_files:
+                file_path = os.path.join(item_path, file)
+               
+                if file_path.endswith(".zip"):
+                    print(f"\t\tAssignment: {file}")
+                    extract_zip(file_path, item_path)
+
+                    all_files2 = os.listdir(item_path)
+                    for file2 in all_files2:
+                        if f"{file2}".lower() == "readme.txt":
+                            print(f"\t\t\t{file2}")
+                            with open(os.path.join(item_path, file2), 'r') as file:
+                                content = file.read()
+                                seven_digit_numbers = re.findall(r'\b\d{7}\b', content)
+                                print(seven_digit_numbers) 
+
+        # Nested Zips
         if item.endswith(".zip"):
             extract_zip(item_path, nested_folder, True)
 
             for extracted_item in os.listdir(nested_folder):
+                print(f"\t\t{extracted_item}")
                 
                 extracted_item_path = os.path.join(nested_folder, extracted_item)
 
@@ -69,6 +91,8 @@ def move_extracted_content(parent_folder, print_info):
                         )
                     os.rmdir(extracted_item_path)
 
+        # Abgaben direkt
+   
 
 def formatXSL(input_file_path, group):
     """Format XLSX Sheet and color in rows where dropboxes are there"""
