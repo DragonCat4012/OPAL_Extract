@@ -1,8 +1,8 @@
 # OPAL ZIP Extractor
 
 ![alt text](assets/image.png)
-
 ## Run
+
 
 ```bash
 python3 main.py <path_to_zip> <group_nr>
