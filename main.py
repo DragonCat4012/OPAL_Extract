@@ -24,19 +24,19 @@ def extract_zip(zip_file_path, extraction_folder, print_info=False):
     rating_file_name = None
     for item in os.listdir(extraction_folder):
         if item.endswith(".xlsx"):
-            Logger.info(item, 1)
+            # Logger.info(item, 1)
             rating_file_name = os.path.join(extraction_folder, item)
     move_extracted_content(extraction_folder, print_info)
 
-    # print(f"> Returning : {rating_file_name}")
     return rating_file_name
 
 
-def add_team(members, imma_nr):
+def add_team(members: list[str], imma_nr: str):
     """Add immanrs to teams or create new one"""
-    for t in groups:
-        if t.is_member(imma_nr):
+    for team in groups:
+        if team.is_member(imma_nr):
             return
+
     members.append(imma_nr)
     groups.append(Team(members))
 
@@ -60,7 +60,7 @@ def move_extracted_content(parent_folder, print_info):
 
     for item in os.listdir(nested_folder):
         if print_info:
-            print(f"\t{item}")
+            Logger.info_colored(f"{item}")
         imma_nr = f"{item}".split("_")[-1]
 
         item_path = os.path.join(nested_folder, item)
@@ -72,7 +72,7 @@ def move_extracted_content(parent_folder, print_info):
                 file_path = os.path.join(item_path, file)
 
                 if file_path.endswith(".zip"):
-                    Logger.info(f"Assignment: {file}", 2)
+                    Logger.info(f"Assignment: {file}", 1)
                     extract_zip(file_path, item_path)
                     os.remove(file_path)
 
@@ -94,10 +94,11 @@ def move_extracted_content(parent_folder, print_info):
 
                     # parse group member info
                     readme_present = False
+                    print("\t  Ͱ" + "\n\t  Ͱ".join(submission_files))
+
                     for sub_file in submission_files:
                         if f"{sub_file}".lower() == "readme.txt":
                             readme_present = True
-                            Logger.info(f"{sub_file}", 3)
                             txt_file_path = os.path.join(item_path, sub_file)
 
                             with open(txt_file_path, "r", encoding="utf-8") as file:
@@ -105,11 +106,11 @@ def move_extracted_content(parent_folder, print_info):
                                 seven_digit_numbers = re.findall(r"\b\d{7}\b", content)
                                 if imma_nr in seven_digit_numbers:
                                     seven_digit_numbers.remove(imma_nr)
-                                Logger.info(f"Group members: {seven_digit_numbers}", 2)
+                                Logger.info(f"Group members: {seven_digit_numbers}", 1)
                                 add_team(seven_digit_numbers, imma_nr)
 
                     if not readme_present:
-                        Logger.error("No readme found :c", 3)
+                        Logger.error("No readme found :c", 2)
 
         # Nested Zips
         if item.endswith(".zip"):

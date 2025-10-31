@@ -91,7 +91,7 @@ def _edit_colums_with_group_info(
 
     # tmp save newly added rows with their color
     new_added_row_colors = {}
-    insertEmptyRowBeforeOtherGroupMembers = True
+    insert_empty_row_before_other_group_members = True
 
     for row in sheet.iter_rows(min_row=1):
         value: str = f"{row[target_index].value}"
@@ -118,9 +118,9 @@ def _edit_colums_with_group_info(
                         "Punkte": 0,
                     }
 
-                    if insertEmptyRowBeforeOtherGroupMembers:
+                    if insert_empty_row_before_other_group_members:
                         df = df._append({"Matrikelnummer": ""}, ignore_index=True)
-                        insertEmptyRowBeforeOtherGroupMembers = False
+                        insert_empty_row_before_other_group_members = False
 
                     df = df._append(new_row_data, ignore_index=True)
 
