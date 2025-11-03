@@ -6,27 +6,25 @@ from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
 from openpyxl.utils import get_column_letter
 
 html_colors = [
-    "#4ECDC4",  # Soft Green
-    "#2980B9",  # Bright Blue
-    "#6C5CE7",  # Violet
-    "#8E44AD",  # Purple
-    "#FF8B71",  # Red-Orange
-    "#FF6B6B",  # Light Red
-    "#B33771",  # Pink
-    "#E74C3C",  # Red
-    "#D35400",  # Pumpkin
-    "#E67E22",  # Carrot Orange
-    "#F1C40F",  # Yellow
-    "#33FF57",  # Green
-    "#16A085",  # Dark Turquoise
-    "#1ABC9C",  # Turquoise
-    "#3357FF",  # Blue
-    "#3498DB",  # Bright Blue
-    "#9B59B6",  # Amethyst
-    "#2ECC71",  # Emerald
-    "#F39C12",  # Orange
+    "#85E6DF",  # Soft Green
+    "#55A6DB",  # Bright Blue
+    "#897CEE",  # Violet
+    "#BE7DDA",  # Purple
+    "#F7AC80",  # Red-Orange
+    "#F56E6E",  # Light Red
+    "#D374A0",  # Pink
+    "#EE8F64",  # Carrot Orange
+    "#E7D27B",  # Yellow
+    "#79F38F",  # Green
+    "#5EC2AE",  # Dark Turquoise
+    "#44B8CC",  # Turquoise
+    "#8599F3",  # Blue
+    "#75C1F3",  # Bright Blue
+    "#C279DF",  # Amethyst
+    "#56E090",  # Emerald
+    "#FAC165",  # Orange
     "#7F8C8D",  # Grey
-    "#C0392B",  # Strong Red
+    "#DB6254",  # Strong Red
     "#FFB142",  # Golden Yellow
     "#F39C12",  # Orange
     "#F8C291",  # Peach
@@ -159,5 +157,6 @@ def _add_missing_headers(sheet):
 
     h1 = len(headers) + 1
     for val in arr:  # start=1 for 1-based index
-        sheet.cell(row=1, column=h1, value=val)
-        h1 += 1
+        if val not in headers:
+            sheet.cell(row=1, column=h1, value=val)
+            h1 += 1
