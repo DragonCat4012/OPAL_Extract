@@ -135,7 +135,7 @@ def move_extracted_content(parent_folder, print_info):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        Logger.error("Usage: python script.py <zip_file_path> <groupnumber>")
+        Logger.error("Usage: python3 main.py <zip_file_path> <groupnumber>")
         sys.exit(1)
 
     output_zip_file_path = sys.argv[1]
