@@ -4,10 +4,11 @@
 
 ## Run
 
-
 ```bash
 python3 main.py <path_to_zip> <group_nr>
 ```
+
+(or python depending)
 
 ### Install dependencies
 
@@ -39,4 +40,4 @@ source .venv/bin/activate
 
 ## Example Output Table
 
-![Example table output](image-1.png)
+![Example table output](assets/image-1.png)
