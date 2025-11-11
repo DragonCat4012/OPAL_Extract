@@ -56,11 +56,14 @@ def format_xlsx(input_file_path, group, all_groups):
         "Standort",
         "Startdatum",
         "Dauer",
+        "Versuche"
     ]
 
     _edit_colums_with_group_info(
         input_file_path, output_file_path, columns_to_remove, all_groups
     )
+
+    move_rows_by_color(output_file_path)
 
 
 def _edit_colums_with_group_info(
@@ -156,7 +159,61 @@ def _add_missing_headers(sheet):
     headers = [cell.value for cell in sheet[1]]
 
     h1 = len(headers) + 1
-    for val in arr:  # start=1 for 1-based index
+    for val in arr:
         if val not in headers:
             sheet.cell(row=1, column=h1, value=val)
             h1 += 1
+
+def move_rows_by_color(filename):
+    """Reorder rows based on their color"""
+    print("Reorder rows")
+    wb = load_workbook(filename)
+    ws = wb.active
+
+    white_rows = []
+
+    # Group rows based on color
+    color_dict = {}
+    for row in ws.iter_rows(min_row=2):  # Skip header row if there is one
+        color = get_color(row)
+
+        if color == '00000000':  # ungraded people
+            white_rows.append(row)
+            continue
+
+        if color not in color_dict:
+            color_dict[color] = []
+        color_dict[color].append(row)
+
+    # Clear the existing rows except header
+    ws.delete_rows(2, ws.max_row) 
+
+    # Re-add rows sorted by color
+    start_row = 2  # Start writing after header
+    for color, rows in color_dict.items():
+        for row in rows:
+            for cell in row:
+                new_cell = ws.cell(row=start_row, column=cell.col_idx, value=cell.value)
+                new_cell.fill = PatternFill(start_color=cell.fill.start_color.index,
+                                             end_color=cell.fill.end_color.index,
+                                             fill_type=cell.fill.fill_type)
+                new_cell.alignment = Alignment(horizontal="center")
+            start_row += 1
+
+    # Add spacer between groups and non-groups
+    if white_rows:
+        start_row += 1  # Create an empty row before writing white rows
+
+    # Re-add empty rows
+    for row in white_rows:
+        for cell in row:
+            new_cell = ws.cell(row=start_row, column=cell.col_idx, value=cell.value)
+            new_cell.alignment = Alignment(horizontal="center")
+        start_row += 1
+
+    wb.save(filename)
+
+def get_color(row):
+    """Get row group color"""
+    cell = row[0]
+    return cell.fill.start_color.index if cell.fill else None

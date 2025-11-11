@@ -1,6 +1,7 @@
 # OPAL ZIP Extractor
 
-![alt text](assets/image.png)
+![Restructure showcase](assets/image.png)
+
 ## Run
 
 
@@ -38,4 +39,4 @@ source .venv/bin/activate
 
 ## Example Output Table
 
-![alt text](assets/image-1.png)
+![Example table output](image-1.png)
