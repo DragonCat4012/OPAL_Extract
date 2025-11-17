@@ -110,7 +110,8 @@ def move_extracted_content(parent_folder, print_info):
                                 add_team(seven_digit_numbers, imma_nr)
 
                     if not readme_present:
-                        Logger.error("No readme found :c", 2)
+                        Logger.error("No readme found or readme in subfolder:c", 2)
+                        add_team([], imma_nr)
 
         # Nested Zips
         if item.endswith(".zip"):
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     # remove dir if already exists
     if os.path.exists(FOLDERNAME):
         shutil.rmtree(FOLDERNAME)
-        Logger.info("Directory ZIP1 has been deleted successfully.")
+        Logger.info(f"Previous Directory [{FOLDERNAME}] has been deleted successfully.")
 
     file_path = extract_zip(output_zip_file_path, FOLDERNAME)
     format_xlsx(file_path, groupnumber, groups)
