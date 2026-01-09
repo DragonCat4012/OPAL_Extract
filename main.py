@@ -1,12 +1,12 @@
-import zipfile
 import os
-import sys
-import shutil
 import re
+import shutil
+import sys
+import zipfile
 
+from lib.Logger import Logger
 from lib.team import Team
 from lib.xslx_formatter import format_xlsx
-from lib.Logger import Logger
 
 imma_nr_map = {}  # read entrys from readme.txt
 groups = []  #  all sub-groups
@@ -82,21 +82,44 @@ def move_extracted_content(parent_folder, print_info):
                         for entry in submission_files
                         if os.path.isdir(os.path.join(item_path, entry))
                     ]
+                    submission_files_level2 = []
 
                     # Extract subfolder if not directly zipped
                     for folder in folder_names:
+
                         if folder == file.split(".")[0]:
+                            #print("\t  Ͱ " + folder)
                             dir_path = os.path.join(item_path, folder)
+
                             for x in os.listdir(dir_path):
+                              #  print("\t  Ͱ " + x)
                                 shutil.move(os.path.join(dir_path, x), item_path)
                                 submission_files.append(x)
                             os.rmdir(os.path.join(item_path, folder))
+                        else:
+                            if folder == "__MACOSX": # ignore mac files
+                                continue
+
+                            submission_files.remove(folder) # dont print again
+                            print("\t  ╙ " + folder)
+                            dir_path = os.path.join(item_path, folder)
+
+                            for x in os.listdir(dir_path):
+                                print("\t\t  Ͱ " + x)
+                                shutil.move(os.path.join(dir_path, x), item_path)
+                                #submission_files.append(x)
+                                submission_files_level2.append(x)
+
+                        #    os.rmdir(os.path.join(item_path, folder))
 
                     # parse group member info
                     readme_present = False
-                    print("\t  Ͱ" + "\n\t  Ͱ".join(submission_files))
+                    if len(submission_files) > 0:
+                       print("\t  Ͱ " + "\n\t  Ͱ ".join(submission_files))
 
-                    for sub_file in submission_files:
+                    relevant_files = submission_files+ submission_files_level2
+
+                    for sub_file in relevant_files:
                         if f"{sub_file}".lower() == "readme.txt":
                             readme_present = True
                             txt_file_path = os.path.join(item_path, sub_file)
