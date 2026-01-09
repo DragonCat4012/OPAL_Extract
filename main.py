@@ -120,7 +120,7 @@ def move_extracted_content(parent_folder, print_info):
                     relevant_files = submission_files+ submission_files_level2
 
                     for sub_file in relevant_files:
-                        if f"{sub_file}".lower() == "readme.txt":
+                        if "readme" in f"{sub_file}".lower():# == "readme.txt": # sometimes files named like "readme (1).txt"???
                             readme_present = True
                             txt_file_path = os.path.join(item_path, sub_file)
 

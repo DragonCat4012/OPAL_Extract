@@ -1,9 +1,10 @@
-import pandas as pd
 import os
+
+import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Alignment
-from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
+from openpyxl.styles import Alignment, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
 
 html_colors = [
     "#85E6DF",  # Soft Green
@@ -47,6 +48,7 @@ def format_xlsx(input_file_path, group, all_groups):
 
     columns_to_remove = [
         "Anrede",
+        "Dienstart",
         "Studiengruppe",
         "Organisationseinheit",
         "Fachsemester",
@@ -186,7 +188,7 @@ def move_rows_by_color(filename):
         color_dict[color].append(row)
 
     # Clear the existing rows except header
-    ws.delete_rows(2, ws.max_row) 
+    ws.delete_rows(2, ws.max_row)
 
     # Re-add rows sorted by color
     start_row = 2  # Start writing after header
