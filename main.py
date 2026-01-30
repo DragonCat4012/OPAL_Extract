@@ -11,6 +11,22 @@ from lib.xslx_formatter import format_xlsx
 imma_nr_map = {}  # read entrys from readme.txt
 groups = []  #  all sub-groups
 
+def read_readMe(txt_file_path, imma_nr) -> bool:
+    """Extract group member info from readme file"""
+    readme_present = False
+
+    if "readme" in f"{txt_file_path}".replace('_', '').strip().lower():# == "readme.txt": # sometimes files named like "readme (1).txt"???
+        readme_present = True
+
+        with open(txt_file_path, "r", encoding="utf-8") as file:
+            content = file.read()
+            seven_digit_numbers = re.findall(r"\b\d{7}\b", content)
+            if imma_nr in seven_digit_numbers:
+                seven_digit_numbers.remove(imma_nr)
+            Logger.info(f"Group members: {seven_digit_numbers}", 1)
+            add_team(seven_digit_numbers, imma_nr)
+    return readme_present
+
 
 def extract_zip(zip_file_path, extraction_folder, print_info=False):
     """Extract zip files"""
@@ -106,7 +122,7 @@ def move_extracted_content(parent_folder, print_info):
 
                             for x in os.listdir(dir_path):
                                 print("\t\t  Ͱ " + x)
-                                shutil.move(os.path.join(dir_path, x), item_path)
+                                #shutil.move(os.path.join(dir_path, x), item_path)
                                 #submission_files.append(x)
                                 submission_files_level2.append(x)
 
@@ -117,20 +133,10 @@ def move_extracted_content(parent_folder, print_info):
                     if len(submission_files) > 0:
                        print("\t  Ͱ " + "\n\t  Ͱ ".join(submission_files))
 
-                    relevant_files = submission_files+ submission_files_level2
-
-                    for sub_file in relevant_files:
-                        if "readme" in f"{sub_file}".lower():# == "readme.txt": # sometimes files named like "readme (1).txt"???
-                            readme_present = True
-                            txt_file_path = os.path.join(item_path, sub_file)
-
-                            with open(txt_file_path, "r", encoding="utf-8") as file:
-                                content = file.read()
-                                seven_digit_numbers = re.findall(r"\b\d{7}\b", content)
-                                if imma_nr in seven_digit_numbers:
-                                    seven_digit_numbers.remove(imma_nr)
-                                Logger.info(f"Group members: {seven_digit_numbers}", 1)
-                                add_team(seven_digit_numbers, imma_nr)
+                    for sub_file in submission_files + submission_files_level2:
+                        txt_file_path = os.path.join(item_path, sub_file)
+                        result = read_readMe(txt_file_path, imma_nr)
+                        readme_present =  result if result else readme_present # only update to true
 
                     if not readme_present:
                         Logger.error("No readme found or readme in subfolder:c", 2)
