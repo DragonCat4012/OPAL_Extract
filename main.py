@@ -124,8 +124,7 @@ def move_extracted_content(parent_folder, print_info):
                                 print("\t\t  Ͱ " + x)
                                 #shutil.move(os.path.join(dir_path, x), item_path)
                                 #submission_files.append(x)
-                                submission_files_level2.append(x)
-
+                                submission_files_level2.append(os.path.join(dir_path, x))
                         #    os.rmdir(os.path.join(item_path, folder))
 
                     # parse group member info
@@ -133,9 +132,14 @@ def move_extracted_content(parent_folder, print_info):
                     if len(submission_files) > 0:
                        print("\t  Ͱ " + "\n\t  Ͱ ".join(submission_files))
 
-                    for sub_file in submission_files + submission_files_level2:
+                    for sub_file in submission_files:
                         txt_file_path = os.path.join(item_path, sub_file)
                         result = read_readMe(txt_file_path, imma_nr)
+                        readme_present =  result if result else readme_present # only update to true
+
+                    #  subfolders already in path - dont add itemPath
+                    for sub_file in submission_files_level2:
+                        result = read_readMe(sub_file, imma_nr)
                         readme_present =  result if result else readme_present # only update to true
 
                     if not readme_present:
