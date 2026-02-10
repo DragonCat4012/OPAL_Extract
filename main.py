@@ -96,10 +96,11 @@ def move_extracted_content(parent_folder, print_info):
                     folder_names = [
                         entry
                         for entry in submission_files
-                        if os.path.isdir(os.path.join(item_path, entry))
+                        if entry == "__MACOSX" and os.path.isdir(os.path.join(item_path, entry))
+                        # ignore mac files
                     ]
                     submission_files_level2 = []
-
+                    print(submission_files)
                     # Extract subfolder if not directly zipped
                     for folder in folder_names:
 
@@ -112,9 +113,6 @@ def move_extracted_content(parent_folder, print_info):
                                 shutil.move(os.path.join(dir_path, x), item_path)
                                 submission_files.append(x)
                             os.rmdir(os.path.join(item_path, folder))
-                        else:
-                            if folder == "__MACOSX": # ignore mac files
-                                continue
 
                             submission_files.remove(folder) # dont print again
                             print("\t  ╙ " + folder)
