@@ -38,7 +38,7 @@ html_colors = [
 ]
 
 
-def format_xlsx(input_file_path, group, all_groups):
+def format_xlsx(input_file_path, group, all_groups, singular_people):
     """Format XLSX Sheet and color in rows where dropboxes are there"""
     # TODO: maybe only dropboxes with content in them?
 
@@ -58,18 +58,22 @@ def format_xlsx(input_file_path, group, all_groups):
         "Standort",
         "Startdatum",
         "Dauer",
-        "Versuche"
+        "Versuche",
     ]
 
     _edit_colums_with_group_info(
-        input_file_path, output_file_path, columns_to_remove, all_groups
+        input_file_path,
+        output_file_path,
+        columns_to_remove,
+        all_groups,
+        singular_people,
     )
 
     move_rows_by_color(output_file_path)
 
 
 def _edit_colums_with_group_info(
-    input_file_path, output_file_path, columns_to_remove, all_groups
+    input_file_path, output_file_path, columns_to_remove, all_groups, singular_people
 ):
     df = pd.read_excel(input_file_path)
     df.drop(columns=columns_to_remove, inplace=True, errors="ignore")
@@ -85,17 +89,41 @@ def _edit_colums_with_group_info(
     color_index = 0
 
     # assign colors
+    for p in singular_people:
+        p.color = html_colors[color_index % len(html_colors)].replace("#", "")
+        color_index += 1
+    # colors for groups
     for t in all_groups:
         t.color = html_colors[color_index].replace("#", "")
         color_index += 1
 
     header = df.columns.tolist()
+
     target_index = header.index("Matrikelnummer")
+    vorname_idx = header.index("Vorname") if "Vorname" in header else None
+    nachname_idx = header.index("Nachname") if "Nachname" in header else None
 
     # tmp save newly added rows with their color
     new_added_row_colors = {}
     insert_empty_row_before_other_group_members = True
 
+    # find names
+    if vorname_idx is not None and nachname_idx is not None:
+        sing_lookup = {p.get_key(): p.color for p in singular_people}
+
+        for row in sheet.iter_rows(min_row=2):
+            vorname = str(row[vorname_idx].value or "").strip()
+            nachname = str(row[nachname_idx].value or "").strip()
+            key = f"{vorname.lower()} {nachname.lower()}"
+            if key in sing_lookup:
+                fill = PatternFill(
+                    start_color=sing_lookup[key],
+                    end_color=sing_lookup[key],
+                    fill_type="solid",
+                )
+                for cell in row:
+                    cell.fill = fill
+    # gorup colors
     for row in sheet.iter_rows(min_row=1):
         value: str = f"{row[target_index].value}"
 
@@ -166,6 +194,7 @@ def _add_missing_headers(sheet):
             sheet.cell(row=1, column=h1, value=val)
             h1 += 1
 
+
 def move_rows_by_color(filename):
     """Reorder rows based on their color"""
     print("Reorder rows")
@@ -179,7 +208,7 @@ def move_rows_by_color(filename):
     for row in ws.iter_rows(min_row=2):  # Skip header row if there is one
         color = get_color(row)
 
-        if color == '00000000':  # ungraded people
+        if color == "00000000":  # ungraded people
             white_rows.append(row)
             continue
 
@@ -196,9 +225,11 @@ def move_rows_by_color(filename):
         for row in rows:
             for cell in row:
                 new_cell = ws.cell(row=start_row, column=cell.col_idx, value=cell.value)
-                new_cell.fill = PatternFill(start_color=cell.fill.start_color.index,
-                                             end_color=cell.fill.end_color.index,
-                                             fill_type=cell.fill.fill_type)
+                new_cell.fill = PatternFill(
+                    start_color=cell.fill.start_color.index,
+                    end_color=cell.fill.end_color.index,
+                    fill_type=cell.fill.fill_type,
+                )
                 new_cell.alignment = Alignment(horizontal="center")
             start_row += 1
 
@@ -214,6 +245,7 @@ def move_rows_by_color(filename):
         start_row += 1
 
     wb.save(filename)
+
 
 def get_color(row):
     """Get row group color"""

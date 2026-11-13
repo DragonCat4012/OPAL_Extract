@@ -5,17 +5,21 @@ import sys
 import zipfile
 
 from lib.Logger import Logger
-from lib.team import Team
+from lib.team import SingularPerson, Team
 from lib.xslx_formatter import format_xlsx
 
 imma_nr_map = {}  # read entrys from readme.txt
 groups = []  #  all sub-groups
+singular_people = []  # people wihtout readme/group
+
 
 def read_readMe(txt_file_path, imma_nr) -> bool:
     """Extract group member info from readme file"""
     readme_present = False
 
-    if "readme" in f"{txt_file_path}".replace('_', '').strip().lower():# == "readme.txt": # sometimes files named like "readme (1).txt"???
+    if (
+        "readme" in f"{txt_file_path}".replace("_", "").strip().lower()
+    ):  # == "readme.txt": # sometimes files named like "readme (1).txt"???
         readme_present = True
 
         with open(txt_file_path, "r", encoding="utf-8") as file:
@@ -52,9 +56,40 @@ def add_team(members: list[str], imma_nr: str):
     for team in groups:
         if team.is_member(imma_nr):
             return
-
     members.append(imma_nr)
     groups.append(Team(members))
+
+
+def _parse_read_me(
+    submission_files, submission_files_level2, item_path, imma_nr, user_name
+):
+    # parse group member info
+    readme_present = False
+    if len(submission_files) > 0:
+        print("\t  Ͱ " + "\n\t  Ͱ ".join(submission_files))
+
+    for sub_file in submission_files:
+        txt_file_path = os.path.join(item_path, sub_file)
+        result = read_readMe(txt_file_path, imma_nr)
+        readme_present = result if result else readme_present  # only update to true
+
+    #  subfolders already in path - dont add itemPath
+    for sub_file in submission_files_level2:
+        result = read_readMe(sub_file, imma_nr)
+
+        readme_present = result if result else readme_present  # only update to true
+
+    if not readme_present:
+        name_from_path = (
+            user_name.replace("_mailbox.tu-dresden.de", "").split(".")[0].split("_")
+            # .isupper()
+        )
+        parts = [part for part in name_from_path if part[:1].isupper()]
+        Logger.error("No readme found or readme in subfolder:c", 2)
+        singular_people.append(SingularPerson(parts[0], " ".join(parts[1:])))
+        return parts
+
+    return None
 
 
 def move_extracted_content(parent_folder, print_info):
@@ -96,53 +131,46 @@ def move_extracted_content(parent_folder, print_info):
                     folder_names = [
                         entry
                         for entry in submission_files
-                        if entry == "__MACOSX" and os.path.isdir(os.path.join(item_path, entry))
+                        if entry == "__MACOSX"
+                        and os.path.isdir(os.path.join(item_path, entry))
                         # ignore mac files
                     ]
                     submission_files_level2 = []
-                    print(submission_files)
+                    # print(submission_files)
                     # Extract subfolder if not directly zipped
                     for folder in folder_names:
-
                         if folder == file.split(".")[0]:
-                            #print("\t  Ͱ " + folder)
+                            # print("\t  Ͱ " + folder)
                             dir_path = os.path.join(item_path, folder)
 
                             for x in os.listdir(dir_path):
-                              #  print("\t  Ͱ " + x)
+                                #  print("\t  Ͱ " + x)
                                 shutil.move(os.path.join(dir_path, x), item_path)
                                 submission_files.append(x)
                             os.rmdir(os.path.join(item_path, folder))
 
-                            submission_files.remove(folder) # dont print again
+                            submission_files.remove(folder)  # dont print again
                             print("\t  ╙ " + folder)
                             dir_path = os.path.join(item_path, folder)
 
                             for x in os.listdir(dir_path):
                                 print("\t\t  Ͱ " + x)
-                                #shutil.move(os.path.join(dir_path, x), item_path)
-                                #submission_files.append(x)
-                                submission_files_level2.append(os.path.join(dir_path, x))
+                                # shutil.move(os.path.join(dir_path, x), item_path)
+                                # submission_files.append(x)
+                                submission_files_level2.append(
+                                    os.path.join(dir_path, x)
+                                )
                         #    os.rmdir(os.path.join(item_path, folder))
 
-                    # parse group member info
-                    readme_present = False
-                    if len(submission_files) > 0:
-                       print("\t  Ͱ " + "\n\t  Ͱ ".join(submission_files))
-
-                    for sub_file in submission_files:
-                        txt_file_path = os.path.join(item_path, sub_file)
-                        result = read_readMe(txt_file_path, imma_nr)
-                        readme_present =  result if result else readme_present # only update to true
-
-                    #  subfolders already in path - dont add itemPath
-                    for sub_file in submission_files_level2:
-                        result = read_readMe(sub_file, imma_nr)
-                        readme_present =  result if result else readme_present # only update to true
-
-                    if not readme_present:
-                        Logger.error("No readme found or readme in subfolder:c", 2)
-                        add_team([], imma_nr)
+                    _parse_read_me(
+                        submission_files,
+                        submission_files_level2,
+                        item_path,
+                        imma_nr,
+                        item,
+                    )
+                else:
+                    _parse_read_me([], [], item_path, imma_nr, item)
 
         # Nested Zips
         if item.endswith(".zip"):
@@ -180,4 +208,4 @@ if __name__ == "__main__":
         Logger.info(f"Previous Directory [{FOLDERNAME}] has been deleted successfully.")
 
     file_path = extract_zip(output_zip_file_path, FOLDERNAME)
-    format_xlsx(file_path, groupnumber, groups)
+    format_xlsx(file_path, groupnumber, groups, singular_people)
